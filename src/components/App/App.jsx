@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import ImageGallery from "../ImageGallery/ImageGallery";
 import { fetchImages } from "../../images-api";
@@ -6,6 +6,7 @@ import toast, { Toaster } from "react-hot-toast";
 import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
+import ImageModal from "../ImageModal/ImageModal";
 
 export default function App() {
   const [images, setImages] = useState([]);
@@ -13,6 +14,18 @@ export default function App() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [largeImageURL, setLargeImageURL] = useState(null);
+  const scrollPositionRef = useRef(0);
+
+  useEffect(() => {
+    if (!loading && images.length > 0) {
+      window.scrollTo({
+        top: scrollPositionRef.current,
+        behavior: "auto",
+      });
+    }
+  }, [images, loading]);
 
   const handleSearchSubmit = async (newQuery) => {
     if (newQuery.trim() === "") {
@@ -36,6 +49,8 @@ export default function App() {
   };
 
   const loadMoreImages = async () => {
+    scrollPositionRef.current = window.pageYOffset;
+
     setLoading(true);
     try {
       const nextPage = page + 1;
@@ -50,6 +65,16 @@ export default function App() {
     }
   };
 
+  const handleImageClick = (largeImageURL) => {
+    setLargeImageURL(largeImageURL);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setLargeImageURL(null);
+  };
+
   return (
     <div>
       <SearchBar onSubmit={handleSearchSubmit} />
@@ -57,10 +82,15 @@ export default function App() {
       {error && <ErrorMessage message={error} />}
       {!loading && !error && images.length > 0 && (
         <>
-          <ImageGallery items={images} />
+          <ImageGallery items={images} onImageClick={handleImageClick} />
           <LoadMoreBtn onClick={loadMoreImages} />
         </>
       )}
+      <ImageModal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+        largeImageURL={largeImageURL}
+      />
       <Toaster />
     </div>
   );
