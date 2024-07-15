@@ -17,9 +17,10 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [largeImageURL, setLargeImageURL] = useState(null);
   const scrollPositionRef = useRef(0);
+  const galleryRef = useRef(null);
 
   useEffect(() => {
-    if (!loading && images.length > 0) {
+    if (images.length > 0 && galleryRef.current) {
       window.scrollTo({
         top: scrollPositionRef.current,
         behavior: "auto",
@@ -80,7 +81,7 @@ export default function App() {
       <SearchBar onSubmit={handleSearchSubmit} />
       {loading && <Loader />}
       {error && <ErrorMessage message={error} />}
-      {!loading && !error && images.length > 0 && (
+      {!error && images.length > 0 && (
         <>
           <ImageGallery items={images} onImageClick={handleImageClick} />
           <LoadMoreBtn onClick={loadMoreImages} />
